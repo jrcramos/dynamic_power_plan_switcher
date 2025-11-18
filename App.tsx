@@ -9,6 +9,7 @@ import { InformationCircleIcon } from './components/icons';
 const App: React.FC = () => {
   const [isElectron, setIsElectron] = useState(false);
   const [isWindows, setIsWindows] = useState(false);
+  const [logPath, setLogPath] = useState<string>('');
 
   useEffect(() => {
     // Check if running in Electron
@@ -16,6 +17,9 @@ const App: React.FC = () => {
       setIsElectron(true);
       window.electronAPI.checkPlatform().then(({ isWindows }) => {
         setIsWindows(isWindows);
+      });
+      window.electronAPI.getLogPath().then((path) => {
+        setLogPath(path);
       });
     }
   }, []);
@@ -41,6 +45,12 @@ const App: React.FC = () => {
   const handleSaveSettings = useCallback((newSettings: Settings) => {
     setSettings(newSettings);
   }, []);
+
+  const handleOpenLogFolder = () => {
+    if (window.electronAPI) {
+      window.electronAPI.openLogFolder();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 font-sans">
@@ -117,8 +127,20 @@ const App: React.FC = () => {
           </div>
         </main>
         
-        <footer className="text-center mt-12 text-gray-500 text-sm">
+        <footer className="text-center mt-12 text-gray-500 text-sm space-y-2">
             <p>{isElectron ? 'Desktop Application v1.0.0' : 'Web Version - For demonstration purposes'}</p>
+            {isElectron && logPath && (
+              <div className="text-xs">
+                <p className="text-gray-600">Log file location:</p>
+                <button
+                  onClick={handleOpenLogFolder}
+                  className="text-blue-400 hover:text-blue-300 underline break-all max-w-full inline-block"
+                  title="Click to open log folder"
+                >
+                  {logPath}
+                </button>
+              </div>
+            )}
         </footer>
       </div>
     </div>

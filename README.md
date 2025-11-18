@@ -188,11 +188,23 @@ powercfg /list
 **Issue: Power plan won't switch**
 - Solution: Run the application as Administrator (right-click → Run as Administrator)
 
-**Issue: Application won't start**
+**Issue: Application won't start or shows a blank screen**
 - Solution: Ensure you have the latest version of Windows and all updates installed
+- Check the log file for detailed error information (see "Log Files" section below)
 
 **Issue: High CPU usage from the app itself**
 - Solution: Increase the monitor interval to reduce checking frequency
+
+### Log Files
+
+The application creates log files to help diagnose issues. Log files are stored at:
+- **Windows**: `%APPDATA%\Dynamic Power Plan Switcher\logs\app.log`
+
+You can access the log folder directly from the application footer when running the desktop version. The log file contains:
+- Application startup information
+- CPU monitoring data
+- Power plan switching events
+- Error messages and warnings
 
 ## Project Structure
 

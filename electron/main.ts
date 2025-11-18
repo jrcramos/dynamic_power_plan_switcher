@@ -3,11 +3,48 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as os from 'os';
+import * as fs from 'fs';
 
 const execPromise = promisify(exec);
 
 let mainWindow: BrowserWindow | null = null;
 let monitoringInterval: NodeJS.Timeout | null = null;
+
+// Setup logging
+const logDir = path.join(app.getPath('userData'), 'logs');
+const logFile = path.join(logDir, 'app.log');
+
+// Ensure log directory exists
+try {
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+} catch (error) {
+  console.error('Failed to create log directory:', error);
+}
+
+// Logging function
+function log(message: string, level: 'INFO' | 'ERROR' | 'WARN' = 'INFO') {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] [${level}] ${message}\n`;
+  
+  // Write to console
+  console.log(logMessage.trim());
+  
+  // Write to file
+  try {
+    fs.appendFileSync(logFile, logMessage);
+  } catch (error) {
+    console.error('Failed to write to log file:', error);
+  }
+}
+
+// Log application start
+log(`Application starting - Version ${app.getVersion()}`);
+log(`Platform: ${process.platform}`);
+log(`Electron version: ${process.versions.electron}`);
+log(`Node version: ${process.versions.node}`);
+log(`Log file location: ${logFile}`);
 
 // Function to get current CPU usage
 function getCpuUsage(): Promise<number> {
@@ -63,9 +100,11 @@ async function getCurrentPowerPlan(): Promise<string> {
   try {
     const { stdout } = await execPromise('powercfg /getactivescheme');
     const match = stdout.match(/Power Scheme GUID:\s+[a-f0-9-]+\s+\((.+?)\)/i);
-    return match ? match[1] : 'Unknown';
+    const plan = match ? match[1] : 'Unknown';
+    log(`Current power plan: ${plan}`);
+    return plan;
   } catch (error) {
-    console.error('Error getting power plan:', error);
+    log(`Error getting power plan: ${error}`, 'ERROR');
     return 'Unknown';
   }
 }
@@ -73,14 +112,17 @@ async function getCurrentPowerPlan(): Promise<string> {
 // Function to set power plan (Windows only)
 async function setPowerPlan(planGuid: string): Promise<boolean> {
   if (process.platform !== 'win32') {
+    log('Cannot set power plan on non-Windows platform', 'WARN');
     return false;
   }
 
   try {
+    log(`Setting power plan to GUID: ${planGuid}`);
     await execPromise(`powercfg /setactive ${planGuid}`);
+    log('Power plan set successfully');
     return true;
   } catch (error) {
-    console.error('Error setting power plan:', error);
+    log(`Error setting power plan: ${error}`, 'ERROR');
     return false;
   }
 }
@@ -103,14 +145,17 @@ async function listPowerPlans(): Promise<Array<{ guid: string; name: string }>> 
       }
     }
     
+    log(`Found ${plans.length} power plans`);
     return plans;
   } catch (error) {
-    console.error('Error listing power plans:', error);
+    log(`Error listing power plans: ${error}`, 'ERROR');
     return [];
   }
 }
 
 function createWindow() {
+  log('Creating main window');
+  
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 900,
@@ -126,21 +171,45 @@ function createWindow() {
   // In development, load from Vite dev server
   // In production, load from built files
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173');
+    const devUrl = 'http://localhost:5173';
+    log(`Loading dev server from ${devUrl}`);
+    mainWindow.loadURL(devUrl);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    log(`Loading production build from ${indexPath}`);
+    mainWindow.loadFile(indexPath).catch(error => {
+      log(`Error loading index.html: ${error}`, 'ERROR');
+    });
   }
 
+  // Log when page finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    log('Page finished loading');
+  });
+
+  // Log any page load errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    log(`Page failed to load: ${errorCode} - ${errorDescription}`, 'ERROR');
+  });
+
+  // Log console messages from the renderer
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    log(`Renderer console [${level}]: ${message} (${sourceId}:${line})`);
+  });
+
   mainWindow.on('closed', () => {
+    log('Main window closed');
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
+  log('App ready, creating window');
   createWindow();
 
   app.on('activate', () => {
+    log('App activated');
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
@@ -148,10 +217,12 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  log('All windows closed');
   if (monitoringInterval) {
     clearInterval(monitoringInterval);
   }
   if (process.platform !== 'darwin') {
+    log('Quitting app');
     app.quit();
   }
 });
@@ -178,4 +249,13 @@ ipcMain.handle('check-platform', async () => {
     platform: process.platform,
     isWindows: process.platform === 'win32',
   };
+});
+
+ipcMain.handle('get-log-path', async () => {
+  return logFile;
+});
+
+ipcMain.handle('open-log-folder', async () => {
+  const { shell } = require('electron');
+  shell.openPath(logDir);
 });
