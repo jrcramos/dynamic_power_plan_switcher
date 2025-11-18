@@ -1,12 +1,20 @@
 # Dynamic Power Plan Switcher
 
 A desktop application for Windows that dynamically changes the power plan based on CPU usage. This application can actually control your operating system's power settings, providing real automated power management.
-To use your system's power plan GUIDs, run in Command Prompt, use those strings in the app instead of the defualts as this changes for each machine:
-```cmd
-powercfg /list
-```
+
+## Screenshots
+
+### Main Interface
+![Main Interface](screenshots/01-main-interface.png)
+*The clean, modern interface shows live status, configuration options, and event log in a single view*
+
+### Active Monitoring
+![Monitoring Active](screenshots/02-monitoring-active.png)
+*Real-time CPU monitoring with automatic event logging - settings are locked during monitoring to ensure consistency*
+
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Desktop Application (Recommended)](#desktop-application-recommended)
 - [Running with Docker (Web Version)](#running-with-docker-web-version)
