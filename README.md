@@ -1,7 +1,10 @@
 # Dynamic Power Plan Switcher
 
 A desktop application for Windows that dynamically changes the power plan based on CPU usage. This application can actually control your operating system's power settings, providing real automated power management.
-
+To use your system's power plan GUIDs, run in Command Prompt:
+```cmd
+powercfg /list
+```
 ## Table of Contents
 
 - [Features](#features)
