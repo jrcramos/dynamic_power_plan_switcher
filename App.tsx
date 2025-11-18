@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Settings } from './types';
 import { usePowerMonitor } from './hooks/usePowerMonitor';
 import StatusDisplay from './components/StatusDisplay';
@@ -8,10 +7,23 @@ import LogViewer from './components/LogViewer';
 import { InformationCircleIcon } from './components/icons';
 
 const App: React.FC = () => {
+  const [isElectron, setIsElectron] = useState(false);
+  const [isWindows, setIsWindows] = useState(false);
+
+  useEffect(() => {
+    // Check if running in Electron
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      setIsElectron(true);
+      window.electronAPI.checkPlatform().then(({ isWindows }) => {
+        setIsWindows(isWindows);
+      });
+    }
+  }, []);
+
   const [settings, setSettings] = useState<Settings>({
     cpuThreshold: 50,
     lowCpuThreshold: 35,
-    monitorInterval: 5, // Default to 5s for better demo experience
+    monitorInterval: 5,
     highPerformanceGuid: '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',
     balancedGuid: '381b4222-f694-41f0-9685-ff5bb260df2e',
   });
@@ -40,16 +52,42 @@ const App: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-500">
             Dynamic Power Plan Switcher
           </h1>
-          <p className="text-gray-400 mt-2">A UI concept for automated power management based on CPU load.</p>
+          <p className="text-gray-400 mt-2">
+            {isElectron && isWindows 
+              ? 'Automated power management based on CPU load' 
+              : 'A desktop application for automated power management based on CPU load'}
+          </p>
         </header>
 
-        <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg relative mb-8 flex items-start" role="alert">
-          <InformationCircleIcon className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"/>
-          <div>
-            <strong className="font-bold">Simulation Notice: </strong>
-            <span className="block sm:inline">This is a web-based simulation. It cannot access your system's hardware or change your actual Windows power plan settings.</span>
+        {!isElectron && (
+          <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg relative mb-8 flex items-start" role="alert">
+            <InformationCircleIcon className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"/>
+            <div>
+              <strong className="font-bold">Web Version Notice: </strong>
+              <span className="block sm:inline">This is a web-based simulation. For full functionality with real system control, please use the desktop application.</span>
+            </div>
           </div>
-        </div>
+        )}
+
+        {isElectron && !isWindows && (
+          <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg relative mb-8 flex items-start" role="alert">
+            <InformationCircleIcon className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"/>
+            <div>
+              <strong className="font-bold">Platform Notice: </strong>
+              <span className="block sm:inline">Power plan switching is only supported on Windows. CPU monitoring will still work on this platform.</span>
+            </div>
+          </div>
+        )}
+
+        {isElectron && isWindows && (
+          <div className="bg-blue-900/30 border border-blue-700 text-blue-200 px-4 py-3 rounded-lg relative mb-8 flex items-start" role="alert">
+            <InformationCircleIcon className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"/>
+            <div>
+              <strong className="font-bold">Administrator Mode: </strong>
+              <span className="block sm:inline">For best results, run this application as Administrator to ensure power plan changes can be applied.</span>
+            </div>
+          </div>
+        )}
 
         <main className="space-y-8">
           <StatusDisplay
@@ -80,7 +118,7 @@ const App: React.FC = () => {
         </main>
         
         <footer className="text-center mt-12 text-gray-500 text-sm">
-            <p>Designed as a conceptual tool. Not connected to any live system services.</p>
+            <p>{isElectron ? 'Desktop Application v1.0.0' : 'Web Version - For demonstration purposes'}</p>
         </footer>
       </div>
     </div>
