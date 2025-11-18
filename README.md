@@ -48,18 +48,18 @@ This application can be run inside a Docker container, providing a consistent an
 
 3.  **Run the Docker Container**:
     ```bash
-    docker run -d -p 8080:80 --name power-switcher power-switcher-app
+    docker run -d -p 7376:80 --name power-switcher power-switcher-app
     ```
     This command:
     - Runs the container in detached mode (`-d`)
-    - Maps port `8080` on your local machine to port `80` inside the container (`-p 8080:80`)
+    - Maps port `7376` on your local machine to port `80` inside the container (`-p 7376:80`)
     - Names the container `power-switcher` for easy reference
     - Uses the `power-switcher-app` image
 
 4.  **Access the Application**:
     Open your web browser and navigate to:
     ```
-    http://localhost:8080
+    http://localhost:7376
     ```
 
 ### Managing the Container
@@ -91,7 +91,7 @@ docker rmi power-switcher-app
 
 ### Using Different Ports
 
-If port 8080 is already in use, you can map to a different port:
+If port 7376 is already in use, you can map to a different port:
 ```bash
 docker run -d -p 3000:80 --name power-switcher power-switcher-app
 ```
@@ -216,7 +216,7 @@ Currently, the application doesn't require environment variables for basic opera
 
 **Issue: Application not loading**
 - Verify container is running: `docker ps`
-- Check if port is accessible: `curl http://localhost:8080`
+- Check if port is accessible: `curl http://localhost:7376`
 - Review NGINX logs: `docker logs power-switcher`
 
 **Issue: Changes not reflected after rebuild**

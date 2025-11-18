@@ -32,9 +32,5 @@ logs
 coverage
 .nyc_output
 
-# Documentation (we only need source files for the build)
-*.md
-!README.md
-
 # CI/CD
 .github

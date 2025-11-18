@@ -1,13 +1,14 @@
 # Build stage
-FROM node:18 AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Configure npm to handle SSL issues in Docker environment and install dependencies
+RUN npm config set strict-ssl false && \
+    npm install
 
 # Copy source files
 COPY . .
