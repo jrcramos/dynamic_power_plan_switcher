@@ -1,0 +1,5 @@
+{
+  "name": "Dynamic Power Plan Switcher",
+  "description": "A web-based dashboard that simulates a Windows utility for dynamically changing the power plan based on CPU usage. This application is a UI concept and cannot control your actual operating system settings.",
+  "requestFramePermissions": []
+}
