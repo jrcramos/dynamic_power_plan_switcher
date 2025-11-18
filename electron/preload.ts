@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setPowerPlan: (planGuid: string) => ipcRenderer.invoke('set-power-plan', planGuid),
   listPowerPlans: () => ipcRenderer.invoke('list-power-plans'),
   checkPlatform: () => ipcRenderer.invoke('check-platform'),
+  getLogPath: () => ipcRenderer.invoke('get-log-path'),
+  openLogFolder: () => ipcRenderer.invoke('open-log-folder'),
 });
