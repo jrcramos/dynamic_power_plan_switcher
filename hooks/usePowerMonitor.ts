@@ -48,23 +48,37 @@ export const usePowerMonitor = (settings: Settings): PowerMonitorHook => {
     setLogs([]);
   }, []);
 
-  const monitor = useCallback(() => {
-    const { cpuThreshold, lowCpuThreshold } = settingsRef.current;
+  const monitor = useCallback(async () => {
+    const { cpuThreshold, lowCpuThreshold, highPerformanceGuid, balancedGuid } = settingsRef.current;
 
-    // Simulate more realistic CPU usage fluctuations
+    // Check if running in Electron
+    const isElectron = typeof window !== 'undefined' && window.electronAPI;
+    
     let newCpuUsage: number;
-    const randomFactor = (Math.random() - 0.5) * 15;
-    const baseUsage = lastCpuUsageRef.current;
     
-    if (baseUsage > 70) {
-      newCpuUsage = baseUsage + (Math.random() * 5 - 4); // Tend to stay high
-    } else if (baseUsage < 20) {
-      newCpuUsage = baseUsage + (Math.random() * 4 - 1); // Tend to stay low
+    if (isElectron) {
+      // Use real CPU monitoring
+      try {
+        newCpuUsage = await window.electronAPI.getCpuUsage();
+      } catch (error) {
+        console.error('Error getting CPU usage:', error);
+        newCpuUsage = lastCpuUsageRef.current;
+      }
     } else {
-      newCpuUsage = baseUsage + randomFactor;
+      // Fallback to simulation for web version
+      const randomFactor = (Math.random() - 0.5) * 15;
+      const baseUsage = lastCpuUsageRef.current;
+      
+      if (baseUsage > 70) {
+        newCpuUsage = baseUsage + (Math.random() * 5 - 4);
+      } else if (baseUsage < 20) {
+        newCpuUsage = baseUsage + (Math.random() * 4 - 1);
+      } else {
+        newCpuUsage = baseUsage + randomFactor;
+      }
+      
+      newCpuUsage = Math.max(0, Math.min(100, Math.round(newCpuUsage)));
     }
-    
-    newCpuUsage = Math.max(0, Math.min(100, Math.round(newCpuUsage)));
     
     lastCpuUsageRef.current = newCpuUsage;
     setCurrentCpuUsage(newCpuUsage);
@@ -73,10 +87,30 @@ export const usePowerMonitor = (settings: Settings): PowerMonitorHook => {
 
     if (newCpuUsage > cpuThreshold && currentPowerPlanRef.current !== PowerPlan.HighPerformance) {
       setCurrentPowerPlan(PowerPlan.HighPerformance);
-      addLog('Threshold exceeded. Switched to High Performance plan.', 'warning');
+      
+      if (isElectron) {
+        try {
+          await window.electronAPI.setPowerPlan(highPerformanceGuid);
+          addLog('Threshold exceeded. Switched to High Performance plan.', 'warning');
+        } catch (error) {
+          addLog('Failed to switch power plan. May require administrator privileges.', 'warning');
+        }
+      } else {
+        addLog('Threshold exceeded. Switched to High Performance plan. (Simulated)', 'warning');
+      }
     } else if (newCpuUsage < lowCpuThreshold && currentPowerPlanRef.current !== PowerPlan.Balanced) {
       setCurrentPowerPlan(PowerPlan.Balanced);
-      addLog('CPU usage low. Switched to Balanced plan.', 'success');
+      
+      if (isElectron) {
+        try {
+          await window.electronAPI.setPowerPlan(balancedGuid);
+          addLog('CPU usage low. Switched to Balanced plan.', 'success');
+        } catch (error) {
+          addLog('Failed to switch power plan. May require administrator privileges.', 'success');
+        }
+      } else {
+        addLog('CPU usage low. Switched to Balanced plan. (Simulated)', 'success');
+      }
     }
   }, [addLog]);
 

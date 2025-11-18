@@ -1,35 +1,82 @@
 # Dynamic Power Plan Switcher
 
-A web-based dashboard that simulates a Windows utility for dynamically changing the power plan based on CPU usage. This application is a UI concept and cannot control your actual operating system settings.
+A desktop application for Windows that dynamically changes the power plan based on CPU usage. This application can actually control your operating system's power settings, providing real automated power management.
 
 ## Table of Contents
 
 - [Features](#features)
-- [Running with Docker](#running-with-docker)
+- [Desktop Application (Recommended)](#desktop-application-recommended)
+- [Running with Docker (Web Version)](#running-with-docker-web-version)
 - [Local Development](#local-development)
-- [Docker Setup Details](#docker-setup-details)
-- [Configuration Files](#configuration-files)
+- [How It Works](#how-it-works)
+- [Configuration](#configuration)
 
 ## Features
 
-- Real-time CPU usage simulation
-- Dynamic power plan switching based on configurable thresholds
-- Activity log for monitoring power plan changes
-- Customizable monitoring intervals
-- Modern, responsive UI built with React and Tailwind CSS
+- **Real CPU Usage Monitoring**: Monitors actual CPU usage on your system
+- **Automatic Power Plan Switching**: Switches Windows power plans based on configurable CPU thresholds
+- **Desktop Application**: Native Electron-based desktop app with system integration
+- **Activity Log**: Real-time monitoring of power plan changes and CPU usage
+- **Customizable Settings**: Configure CPU thresholds and monitoring intervals
+- **Cross-platform UI**: Modern, responsive interface built with React and Tailwind CSS
+- **Web Version Available**: Also runnable as a web-based simulation for demonstration
 
-## Running with Docker
+## Desktop Application (Recommended)
 
-This application can be run inside a Docker container, providing a consistent and isolated environment.
+The desktop application provides full functionality with real system control on Windows.
+
+### Prerequisites
+
+- Windows 10 or later (for power plan control)
+- Node.js 18 or higher (for development only)
+
+### Download and Install
+
+1. **Download the installer** from the [Releases](https://github.com/jrcramos/dynamic_power_plan_switcher/releases) page
+2. **Run the installer** and follow the installation wizard
+3. **Run as Administrator** for best results (required to change power plans)
+
+### Building from Source
+
+1. **Clone the Repository**:
+    ```bash
+    git clone https://github.com/jrcramos/dynamic_power_plan_switcher.git
+    cd dynamic_power_plan_switcher
+    ```
+
+2. **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+3. **Build the Application**:
+    ```bash
+    npm run electron:build
+    ```
+    
+    The installer will be created in the `release` directory.
+
+### Running in Development Mode
+
+To test the application during development:
+
+```bash
+npm run electron:dev
+```
+
+This starts both the Vite dev server and Electron in development mode with hot reload.
+
+## Running with Docker (Web Version)
+
+The web version is a simulation and cannot control actual system settings. For full functionality, use the desktop application.
 
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running on your system
-- Basic familiarity with command-line interface
 
 ### Quick Start
 
-1.  **Clone the Repository** (if you haven't already):
+1.  **Clone the Repository**:
     ```bash
     git clone https://github.com/jrcramos/dynamic_power_plan_switcher.git
     cd dynamic_power_plan_switcher
@@ -39,22 +86,11 @@ This application can be run inside a Docker container, providing a consistent an
     ```bash
     docker build -t power-switcher-app .
     ```
-    This command:
-    - Uses the multi-stage `Dockerfile` to build the application
-    - Installs Node.js dependencies
-    - Builds the React application
-    - Creates an optimized production image with NGINX
-    - Tags the image as `power-switcher-app`
 
 3.  **Run the Docker Container**:
     ```bash
     docker run -d -p 7376:80 --name power-switcher power-switcher-app
     ```
-    This command:
-    - Runs the container in detached mode (`-d`)
-    - Maps port `7376` on your local machine to port `80` inside the container (`-p 7376:80`)
-    - Names the container `power-switcher` for easy reference
-    - Uses the `power-switcher-app` image
 
 4.  **Access the Application**:
     Open your web browser and navigate to:
@@ -74,32 +110,14 @@ docker stop power-switcher
 docker start power-switcher
 ```
 
-**View container logs:**
-```bash
-docker logs power-switcher
-```
-
 **Remove the container:**
 ```bash
 docker rm power-switcher
 ```
 
-**Remove the image:**
-```bash
-docker rmi power-switcher-app
-```
-
-### Using Different Ports
-
-If port 7376 is already in use, you can map to a different port:
-```bash
-docker run -d -p 3000:80 --name power-switcher power-switcher-app
-```
-Then access the application at `http://localhost:3000`
-
 ## Local Development
 
-If you want to run the application locally without Docker:
+For web-based development without Electron:
 
 ### Prerequisites
 
@@ -119,111 +137,76 @@ If you want to run the application locally without Docker:
     ```
 
 3.  **Access the Application**:
-    Open your browser to `http://localhost:3000`
+    Open your browser to `http://localhost:5173`
 
 4.  **Build for Production**:
     ```bash
     npm run build
     ```
-    The built files will be in the `dist` directory.
 
-## Docker Setup Details
+## How It Works
 
-### Dockerfile
+### Desktop Application
 
-The application uses a multi-stage Docker build process:
+1. **CPU Monitoring**: The application continuously monitors CPU usage using Node.js system APIs
+2. **Threshold Detection**: When CPU usage exceeds the configured threshold, it switches to High Performance mode
+3. **Power Plan Switching**: Uses Windows `powercfg` command to change power plans
+4. **Return to Balanced**: When CPU usage drops below the low threshold, it returns to Balanced mode
 
-1.  **Build Stage** (node:18-alpine):
-    - Installs Node.js dependencies
-    - Copies source code
-    - Builds the React application using Vite
-    - Produces optimized static files in the `dist` directory
+### Administrator Privileges
 
-2.  **Production Stage** (nginx:alpine):
-    - Uses a minimal NGINX Alpine image
-    - Copies built files from the build stage
-    - Configures NGINX with custom settings
-    - Exposes port 80
-    - Serves the application efficiently
+The application requests administrator privileges because changing Windows power plans requires elevated permissions. You can run it without admin rights, but power plan switching will fail (CPU monitoring will still work).
 
-**Benefits of this approach:**
-- Smaller final image size (only includes production assets)
-- No development dependencies in production
-- Faster deployment and reduced attack surface
-- Optimized for serving static files
+### Supported Platforms
 
-### NGINX Configuration
+- **Windows**: Full functionality (CPU monitoring + power plan control)
+- **macOS/Linux**: CPU monitoring only (no power plan control)
+- **Web Version**: Simulation mode only
 
-The `.docker/nginx.conf` file contains the NGINX server configuration:
+## Configuration
 
-**Key Features:**
-- **SPA Support**: Redirects all routes to `index.html` for client-side routing
-- **Gzip Compression**: Reduces bandwidth usage for text-based files
-- **Security Headers**: Adds protective HTTP headers (X-Frame-Options, X-Content-Type-Options, etc.)
-- **Static Asset Caching**: Sets long-term caching for JS, CSS, images, and fonts
-- **Dynamic Content**: Disables caching for `index.html` to ensure users get the latest version
-- **Health Check Endpoint**: Provides `/health` endpoint for container health monitoring
+### Power Plan GUIDs
 
-**Configuration Highlights:**
-```nginx
-# Serves files from /usr/share/nginx/html
-root /usr/share/nginx/html;
+The application uses Windows Power Plan GUIDs to switch between plans:
 
-# Fallback to index.html for SPA routing
-try_files $uri $uri/ /index.html;
+- **High Performance**: `8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c`
+- **Balanced**: `381b4222-f694-41f0-9685-ff5bb260df2e`
 
-# Cache static assets for 1 year
-location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-}
+To find your system's power plan GUIDs, run in Command Prompt:
+```cmd
+powercfg /list
 ```
 
-## Configuration Files
+### Configurable Settings
 
-### Project Structure
-
-```
-.
-├── Dockerfile              # Docker build instructions
-├── .docker/
-│   └── nginx.conf         # NGINX server configuration
-├── package.json           # Node.js dependencies and scripts
-├── vite.config.ts        # Vite build configuration
-├── index.html            # HTML entry point
-├── App.tsx               # Main React component
-├── components/           # React components
-├── hooks/                # Custom React hooks
-└── dist/                 # Built files (generated)
-```
-
-### Environment Variables
-
-Currently, the application doesn't require environment variables for basic operation. If you need to configure API keys or other settings, you can:
-
-1. Create a `.env` file in the project root
-2. Add your variables (e.g., `VITE_API_KEY=your_key`)
-3. Rebuild the Docker image
+- **CPU Threshold**: CPU usage percentage to trigger High Performance mode (default: 50%)
+- **Low CPU Threshold**: CPU usage percentage to return to Balanced mode (default: 35%)
+- **Monitor Interval**: How often to check CPU usage in seconds (default: 5s)
 
 ## Troubleshooting
 
-**Issue: Port already in use**
-- Solution: Use a different port mapping (e.g., `-p 3000:80`)
+**Issue: Power plan won't switch**
+- Solution: Run the application as Administrator (right-click → Run as Administrator)
 
-**Issue: Container won't start**
-- Check logs: `docker logs power-switcher`
-- Verify Docker is running: `docker ps`
+**Issue: Application won't start**
+- Solution: Ensure you have the latest version of Windows and all updates installed
 
-**Issue: Application not loading**
-- Verify container is running: `docker ps`
-- Check if port is accessible: `curl http://localhost:7376`
-- Review NGINX logs: `docker logs power-switcher`
+**Issue: High CPU usage from the app itself**
+- Solution: Increase the monitor interval to reduce checking frequency
 
-**Issue: Changes not reflected after rebuild**
-- Remove old container: `docker rm -f power-switcher`
-- Remove old image: `docker rmi power-switcher-app`
-- Rebuild and run again
+## Project Structure
 
-## License
-
-This project is provided as-is for educational and demonstration purposes.
+```
+.
+├── electron/              # Electron main process files
+│   ├── main.ts           # Main process (system integration)
+│   └── preload.ts        # Preload script (IPC bridge)
+├── components/           # React UI components
+├── hooks/                # React hooks (including power monitoring)
+├── App.tsx               # Main React component
+├── index.html            # HTML entry point
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript config for React
+├── tsconfig.electron.json # TypeScript config for Electron
+└── vite.config.ts        # Vite build configuration
+```
