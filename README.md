@@ -1,6 +1,6 @@
 # Dynamic Power Plan Switcher
 
-A desktop application for Windows (.exe provided, but can be built) that dynamically changes the power plan based on CPU usage. This application can actually control your operating system's power settings, providing real automated power management. Please read especially the "Configuration" secction.
+Automatic power plan switcher for Windows 10 and Windows 11. A desktop application for Windows (.exe provided, but can be built) that dynamically changes the power plan based on CPU usage. This application can actually control your operating system's power settings, providing real automated power management. Please read especially the "Configuration" secction.
 
 ## Screenshots
 
