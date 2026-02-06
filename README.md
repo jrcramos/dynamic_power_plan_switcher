@@ -36,18 +36,32 @@ Automatic power plan switcher for Windows 10 and Windows 11. A desktop applicati
 
 The desktop application provides full functionality with real system control on Windows.
 
-### Prerequisites
+### Installation
+
+**No building required!** Pre-built executables are available for download.
+
+#### Prerequisites
 
 - Windows 10 or later (for power plan control)
-- Node.js 18 or higher (for development only)
 
-### Download and Install
+#### Steps
 
-1. **Download the installer** from the [Releases](https://github.com/jrcramos/dynamic_power_plan_switcher/releases) page
-2. **Run the installer** and follow the installation wizard
+1. **Download the latest `.exe` file** from the [Releases](https://github.com/jrcramos/dynamic_power_plan_switcher/releases) page
+2. **Run the executable** - it will guide you through the installation process
 3. **Run as Administrator** for best results (required to change power plans)
 
-### Building from Source
+> **Note:** You do NOT need Node.js or any development tools to run the application. Just download and run the exe!
+
+### Building from Source (Optional - For Developers)
+
+If you want to build the application yourself or contribute to development:
+
+#### Prerequisites
+
+- Node.js 18 or higher
+- npm (comes with Node.js)
+
+#### Steps
 
 1. **Clone the Repository**:
     ```bash
@@ -67,7 +81,7 @@ The desktop application provides full functionality with real system control on 
     
     The installer will be created in the `release` directory.
 
-### Running in Development Mode
+#### Running in Development Mode
 
 To test the application during development:
 
